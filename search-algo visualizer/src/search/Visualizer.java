@@ -2,26 +2,27 @@ package search;
 
 
 import java.util.ArrayList;
-
+import java.util.HashSet;
 import javafx.application.Application;
 import javafx.concurrent.Task;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseDragEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
 import javafx.stage.Stage;
-
 import javafx.scene.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.ToggleGroup;
 import javafx.event.ActionEvent;  
-import javafx.event.EventHandler;  
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;  
 public class Visualizer extends Application
 {
 	private static final int width = 1000;
@@ -34,11 +35,11 @@ public class Visualizer extends Application
 	private Group recGroup;
 	boolean started = false;
 	private Node finalNode;
-	private boolean drag = false;
-	private String dragNode;
 	private boolean hasStart = true;
 	private boolean hasGoal = true;
 	private String searchType = "ASTAR";
+	private Paint dragColor;
+
 	@Override
 	public void start(Stage stage) throws Exception
 	{
@@ -50,38 +51,148 @@ public class Visualizer extends Application
 		root.addEventFilter(SearchEvent.EXPANDED, this::handleSearchEvent);
 		stage.setTitle("SEARCH ALGORITHM VISUALIZER");
 		Scene scene = new Scene(root, width, height);
-		scene.setOnKeyPressed(new EventHandler<KeyEvent>() 
-		{
-
-			
-			@Override
-			public void handle(KeyEvent event) 
-			{
-				System.out.println(event.getCode());
-				if(event.getCode() == KeyCode.B)
-				{
-					
-				}
-				
-			}});
+		
 		for(Node[] outer : graph.getGrid())
 		{
 			for(Node n : outer)
 			{
 				Rectangle r = new Rectangle(n.getX()*nodeSize, n.getY()*nodeSize, nodeSize, nodeSize);
 				r.setStroke(Color.BLACK);
-				if(n.getX() == graph.goal.getX() && n.getY() == graph.goal.getY())
-				{
+				
+				if(n.equals(graph.getGoal()))
 					r.setFill(Color.RED);
-				}
-				else if(n.getX() == graph.start.getX() && n.getY() == graph.start.getY())
-				{
+				
+				else if(n.equals(graph.getStart()))
 					r.setFill(Color.GREEN);
-				}
+				
 				else
-				{
 					r.setFill(Color.WHITE);
-				}
+				
+				
+				r.setOnMouseDragReleased(new EventHandler<MouseDragEvent>()
+				{
+
+					@Override
+					public void handle(MouseDragEvent arg0)
+					{
+						if(dragColor == Color.GREEN)
+						{
+							r.setFill(Color.GREEN);
+							graph.setStart((int)r.getX()/nodeSize, (int)r.getY()/nodeSize);
+						}
+							
+						
+						else if(dragColor == Color.RED)
+						{
+							r.setFill(Color.RED);
+							graph.setGoal((int)r.getX()/nodeSize, (int)r.getY()/nodeSize);
+						}
+						dragColor = null;
+					}
+					
+				});
+				
+				
+				
+				r.setOnMouseDragExited(new EventHandler<MouseDragEvent>() 
+				{
+
+					@Override
+					public void handle(MouseDragEvent arg0)
+					{
+						if(!started)
+						{
+							
+							if(dragColor == Color.GREEN && r.getFill() == Color.GREEN)
+								r.setFill(Color.WHITE);
+							
+							else if(dragColor == Color.RED && r.getFill() == Color.RED)
+								r.setFill(Color.WHITE);
+							
+						}
+					}
+					
+				});
+				
+				
+				r.setOnMouseDragEntered(new EventHandler<MouseDragEvent>() 
+				{
+					
+					@Override
+					public void handle(MouseDragEvent arg0)
+					{
+
+						if(!started)
+						{
+							if(dragColor == Color.BLACK)
+							{
+								if(r.getFill() == Color.WHITE)
+								{
+									r.setFill(Color.BLACK);
+									graph.addWall((int)r.getX()/nodeSize, (int)r.getY()/nodeSize);
+								}
+							}
+							
+							else if(dragColor == Color.WHITE)
+							{
+								if(r.getFill() == Color.BLACK)
+								{
+									r.setFill(Color.WHITE);
+									graph.removeWall((int)r.getX()/nodeSize, (int)r.getY()/nodeSize);
+								}
+							}
+							
+							else if(dragColor == Color.GREEN && r.getFill() == Color.WHITE)
+							{
+								r.setFill(Color.GREEN);
+								graph.setStart((int)r.getX()/nodeSize, (int)r.getY()/nodeSize);
+							}
+							
+							else if(dragColor == Color.RED && r.getFill() == Color.WHITE)
+							{
+								r.setFill(Color.RED);
+								graph.setGoal((int)r.getX()/nodeSize, (int)r.getY()/nodeSize);
+							}
+							
+						}
+					}
+					
+				});
+				
+				r.setOnDragDetected(new EventHandler<MouseEvent>()
+				{
+					
+					@Override
+					public void handle(MouseEvent me)
+					{
+						
+						if(!started)
+						{
+							r.startFullDrag();
+							if(r.getFill() == Color.WHITE)
+							{
+								dragColor = Color.BLACK;
+							}
+							else if(r.getFill() == Color.BLACK)
+							{
+								dragColor = Color.WHITE;
+							}
+							else if(r.getFill() == Color.GREEN)
+							{
+								dragColor = Color.GREEN;
+								r.setFill(Color.WHITE);
+							}
+							else if(r.getFill() == Color.RED)
+							{
+								dragColor = Color.RED;
+								r.setFill(Color.WHITE);
+							}
+							r.startFullDrag();
+						}
+					}
+							
+				});
+				
 				r.setOnMouseClicked(new EventHandler<MouseEvent>() 
 				{
 					@Override
@@ -90,52 +201,17 @@ public class Visualizer extends Application
 						
 						if(!started)
 						{
-							if(!drag)
+							if(r.getFill() == Color.WHITE)
 							{
-								if(r.getFill() == Color.WHITE)
-								{
-									r.setFill(Color.BLACK);
-									graph.addWall((int)r.getX()/nodeSize, (int)r.getY()/nodeSize);
-								}
-								
-								else if(r.getFill() == Color.GREEN)
-								{
-									drag = true;
-									dragNode = "GREEN";
-									r.setFill(Color.WHITE);
-									hasStart = false;
-								}
-								else if(r.getFill() == Color.RED)
-								{
-									drag = true;
-									dragNode = "RED";
-									r.setFill(Color.WHITE);
-									hasGoal = false;
-								}
-								else if(r.getFill() == Color.BLACK)
-								{
-									r.setFill(Color.WHITE);
-									graph.removeWall((int)r.getX()/nodeSize, (int)r.getY()/nodeSize);
-								}
-							}
-							else
-							{
-								if(dragNode.equals("RED") && r.getFill() != Color.GREEN)
-								{
-									graph.setGoal(new Node((int)r.getX()/nodeSize, (int)r.getY()/nodeSize));
-									r.setFill(Color.RED);
-									drag = false;
-									hasGoal = true;
-								}
-								if(dragNode.equals("GREEN") && r.getFill() != Color.RED)
-								{
-									graph.setStart(new Node((int)r.getX()/nodeSize, (int)r.getY()/nodeSize));
-									r.setFill(Color.GREEN);
-									drag = false;
-									hasStart = true;
-								}
+								r.setFill(Color.BLACK);
+								graph.addWall((int)r.getX()/nodeSize, (int)r.getY()/nodeSize);
 							}
 							
+							else if(r.getFill() == Color.BLACK)
+							{
+								r.setFill(Color.WHITE);
+								graph.removeWall((int)r.getX()/nodeSize, (int)r.getY()/nodeSize);
+							}
 						}
 						
 						
@@ -151,7 +227,6 @@ public class Visualizer extends Application
 		startSearch.setOnAction(new EventHandler<ActionEvent>() 
 		{
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void handle(ActionEvent ae) 
 			{
@@ -161,12 +236,12 @@ public class Visualizer extends Application
 				}
 				if(hasStart && hasGoal && !started)
 				{
-					Task task = new Task<Void>()
+					Task<Node> task = new Task<Node>()
 					{
 						@Override
-						protected Void call() throws Exception {
-							finalNode = graph.search(graph.start, graph.goal, searchType);
-							return null;
+						protected Node call() throws Exception {
+							finalNode = graph.search(graph.getStart(), graph.getGoal(), searchType);
+							return finalNode;
 						}
 							
 					};
@@ -174,7 +249,9 @@ public class Visualizer extends Application
 					task.setOnSucceeded(e ->
 					{
 						started = false;
-						drawPath(finalNode);
+						if(finalNode != null)
+							drawPath(finalNode);
+
 						finished = true;
 					});
 					
@@ -184,11 +261,10 @@ public class Visualizer extends Application
 			}
 					
 		});
+		
 		Button resetGraph = new Button("Reset Graph");
 		resetGraph.setOnAction(new EventHandler<ActionEvent>() 
 		{
-
-			@SuppressWarnings("unchecked")
 			@Override
 			public void handle(ActionEvent ae) 
 			{
@@ -196,7 +272,10 @@ public class Visualizer extends Application
 			}
 					
 		});
+		
+		
 		ToggleGroup searchTypes = new ToggleGroup();
+		
 		RadioButton astar = new RadioButton("A*");
 		astar.setOnAction(new EventHandler<ActionEvent>() 
 		{
@@ -205,6 +284,7 @@ public class Visualizer extends Application
 		});
 		astar.setToggleGroup(searchTypes);
 		astar.setSelected(true);
+		
 		RadioButton bfs = new RadioButton("Breadth First Search");
 		bfs.setOnAction(new EventHandler<ActionEvent>() 
 		{
@@ -212,6 +292,7 @@ public class Visualizer extends Application
 			public void handle(ActionEvent arg0) {searchType = "BFS";	}
 		});
 		bfs.setToggleGroup(searchTypes);
+		
 		RadioButton gbfs = new RadioButton("Greedy Best First Search");
 		gbfs.setOnAction(new EventHandler<ActionEvent>() 
 		{
@@ -220,12 +301,22 @@ public class Visualizer extends Application
 		});
 		gbfs.setToggleGroup(searchTypes);
 		
-		VBox menu = new VBox(10);
-		menu.getChildren().add(astar);
-		menu.getChildren().add(bfs);
-		menu.getChildren().add(gbfs);
-		menu.getChildren().add(startSearch);
-		menu.getChildren().add(resetGraph);
+		
+		VBox algoControls = new VBox(10);
+		Label controlLabel = new Label("Select an Algorithm: ");
+		algoControls.getChildren().add(controlLabel);
+		algoControls.getChildren().add(astar);
+		algoControls.getChildren().add(bfs);
+		algoControls.getChildren().add(gbfs);
+		
+		VBox graphControls = new VBox(10);
+		graphControls.getChildren().add(startSearch);
+		graphControls.getChildren().add(resetGraph);
+		
+		VBox menu = new VBox(50);
+		menu.getChildren().add(algoControls);
+		menu.getChildren().add(graphControls);
+		menu.setPadding(new Insets(20, 10, 10, 10));
 		hbox.getChildren().add(recGroup);
 		hbox.getChildren().add(menu);
 		root.getChildren().add(hbox);
@@ -239,6 +330,10 @@ public class Visualizer extends Application
 	private void reset()
 	{
 		HBox hbox1 = (HBox)root.getChildren().get(0);
+		VBox vbox1 = (VBox)hbox1.getChildren().get(1);
+		if(vbox1.getChildren().size() == 3)
+			vbox1.getChildren().remove(2);
+		
 		Group recGroup1 = (Group)hbox1.getChildren().get(0);
 		graph.resetNodes();
 		finished = false;
@@ -250,11 +345,11 @@ public class Visualizer extends Application
 				recGroup1.getChildren().remove(i);
 				i--;
 			}
-			else if(r.getX()/nodeSize == graph.goal.getX() && r.getY()/nodeSize == graph.goal.getY())
+			else if(r.getX()/nodeSize == graph.getGoal().getX() && r.getY()/nodeSize == graph.getGoal().getY())
 			{
 				r.setFill(Color.RED);
 			}
-			else if(r.getX()/nodeSize == graph.start.getX() && r.getY()/nodeSize == graph.start.getY())
+			else if(r.getX()/nodeSize == graph.getStart().getX() && r.getY()/nodeSize == graph.getStart().getY())
 			{
 				r.setFill(Color.GREEN);
 			}
@@ -269,6 +364,10 @@ public class Visualizer extends Application
 	private void resetSearch()
 	{
 		HBox hbox1 = (HBox)root.getChildren().get(0);
+		VBox vbox1 = (VBox)hbox1.getChildren().get(1);
+		if(vbox1.getChildren().size() == 3)
+			vbox1.getChildren().remove(2);
+		
 		Group recGroup1 = (Group)hbox1.getChildren().get(0);
 		graph.resetSearch();
 		finished = false;
@@ -280,11 +379,11 @@ public class Visualizer extends Application
 				recGroup1.getChildren().remove(i);
 				i--;
 			}
-			else if(r.getX()/nodeSize == graph.goal.getX() && r.getY()/nodeSize == graph.goal.getY())
+			else if(r.getX()/nodeSize == graph.getGoal().getX() && r.getY()/nodeSize == graph.getGoal().getY())
 			{
 				r.setFill(Color.RED);
 			}
-			else if(r.getX()/nodeSize == graph.start.getX() && r.getY()/nodeSize == graph.start.getY())
+			else if(r.getX()/nodeSize == graph.getStart().getX() && r.getY()/nodeSize == graph.getStart().getY())
 			{
 				r.setFill(Color.GREEN);
 			}
@@ -295,18 +394,18 @@ public class Visualizer extends Application
 			
 		}			
 	}
+	
 	private void drawPath(Node goal) 
 	{
-		
+		int count = 1;
+		String displayPath = "Nodes expanded : " + graph.getNodesExpanded() +"\nPath Found :"; 
 		ArrayList<String> path = graph.getPath(finalNode);
-		
-		
-		
-		
-		
-		Node currentNode = graph.start;
+
+		Node currentNode = graph.getStart();
 		for(String s : path)
 		{
+			displayPath +="\n"+count +". " + s;
+			count++;
 			switch(s)
 			{
 			case "down":
@@ -342,7 +441,15 @@ public class Visualizer extends Application
 				
 			
 		}
-		
+		HBox hbox1 = (HBox)root.getChildren().get(0);
+		VBox vbox1 = (VBox)hbox1.getChildren().get(1);
+		ScrollPane pane = new ScrollPane();
+		TextArea p = new TextArea();
+		p.setText(displayPath);
+		pane.setContent(p);
+		pane.setFitToWidth(true);
+		pane.setPrefWidth(50);
+		vbox1.getChildren().add(pane);
 		
 	}
 
@@ -351,7 +458,7 @@ public class Visualizer extends Application
 	{
 		
 		ArrayList<Node> fringe = event.getGraph().getFringe();
-		ArrayList<Node> closed = event.getGraph().getClosed();
+		HashSet<Node> closed = event.getGraph().getClosed();
 
 			for(Node fNode : fringe)
 			{

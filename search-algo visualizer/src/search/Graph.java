@@ -3,9 +3,9 @@ package search;
 
 import java.util.ArrayList;
 import java.util.Collections;
-
+import java.util.HashSet;
 import javafx.event.Event;
-import javafx.event.EventType;
+
 import javafx.scene.Group;
 
 
@@ -14,28 +14,20 @@ public class Graph
 {
 	private int width;
 	private int height;
-	private int actionCostLeft;
-	private int actionCostRight;
-	private int actionCostDown;
-	private int actionCostUp;
+	
 	private int nodesExpanded;
 	private Node[][] grid;
-	private ArrayList<Node> walls, fringe, closed;
-	Node start, goal;
+	private ArrayList<Node> fringe;
+	private HashSet<Node> closed, walls;
+	private Node start, goal;
 	private Group root;
 	
 	public Graph(int width, int height, Group root)
 	{
-		goal = new Node(width/2+1, height/2);
-		start = new Node(width/2-1, height/2);
 		this.root = root;
 		nodesExpanded = 0;
-		actionCostLeft = 1;
-		actionCostRight = 1;
-		actionCostDown = 1;
-		actionCostUp = 1;
-		walls = new ArrayList<Node>();
-		closed = new ArrayList<Node>();
+		walls = new HashSet<Node>();
+		closed = new HashSet<Node>();
 		fringe = new ArrayList<Node>();
 		this.width = width;
 		this.height = height;
@@ -47,39 +39,53 @@ public class Graph
 				grid[i][j] = new Node(i, j);
 			}
 		}
+		goal = grid[width/2+2][height/2];
+		start = grid[width/2-2][height/2];
 		
 
 	}
 	
+	public int getNodesExpanded()
+	{
+		return nodesExpanded;
+	}
+	
 	public void resetNodes() 
 	{
-		goal = new Node(width/2+1, height/2);
-		start = new Node(width/2-1, height/2);
+		
+		for(int i = 0; i < grid.length; i++)
+		{
+			for(int j = 0; j < grid[i].length; j++)
+			{
+				grid[i][j].resetNode(i, j);
+			}
+		}
+		goal = grid[width/2+2][height/2];
+		start = grid[width/2-2][height/2];
 		nodesExpanded = 0;
-		walls = new ArrayList<Node>();
-		closed = new ArrayList<Node>();
-		fringe = new ArrayList<Node>();
+		walls.clear();
+		closed.clear();
+		fringe.clear();
 	}
 	
 	public void resetSearch()
 	{
+		for(int i = 0; i < grid.length; i++)
+		{
+			for(int j = 0; j < grid[i].length; j++)
+			{
+				grid[i][j].resetNode(i, j);
+			}
+		}
 		nodesExpanded = 0;
-		closed = new ArrayList<Node>();
-		fringe = new ArrayList<Node>();
+		closed.clear();
+		fringe.clear();
 	}
 	
 	
 	public void removeWall(int x, int y)
 	{
-		for(int i = 0; i < walls.size(); i++)
-		{
-			Node w = walls.get(i);
-			if(w.getX() == x && w.getY() == y)
-			{
-				walls.remove(i);
-				break;
-			}
-		}
+		walls.remove(grid[x][y]);
 	}
 	
 	public int getWidth()
@@ -93,55 +99,57 @@ public class Graph
 	}
 	private ArrayList<Node> expand(Node n)
 	{
+		Node temp = null;
 		ArrayList<Node> children = new ArrayList<Node>();
 		if(n.getX() > 0)
 		{
-			Node temp = new Node(n.getX()-1, n.getY());
-			temp.setParent(n);
-			temp.setCost(n.getCost() + actionCostLeft);
-			temp.setDepth(n.getDepth()+1);
-			if(!isWall(temp))
+			temp = grid[n.getX()-1][n.getY()];
+			if(!closed.contains(temp) && !walls.contains(temp) && !fringe.contains(temp))
 			{
+				temp.setParent(n);
+				temp.setCost(n.getCost() + 1);
+				temp.setDepth(n.getDepth()+1);
 				children.add(temp);
 			}
 		}
 		
 		if(n.getX() < width-1)
 		{
-			Node temp = new Node(n.getX()+1, n.getY());
-			temp.setParent(n);
-			temp.setCost(n.getCost() + actionCostRight);
-			temp.setDepth(n.getDepth()+1);
-			if(!isWall(temp))
+			temp = grid[n.getX()+1][n.getY()];
+			if(!closed.contains(temp) && !walls.contains(temp)&& !fringe.contains(temp))
 			{
+				temp.setParent(n);
+				temp.setCost(n.getCost() + 1);
+				temp.setDepth(n.getDepth()+1);
 				children.add(temp);
 			}
 		}
 		
 		if(n.getY() > 0)
 		{
-			Node temp = new Node(n.getX(), n.getY()-1);
-			temp.setParent(n);
-			temp.setCost(n.getCost() + actionCostDown);
-			temp.setDepth(n.getDepth()+1);
-			if(!isWall(temp))
+			temp = grid[n.getX()] [n.getY()-1];
+			if(!closed.contains(temp) && !walls.contains(temp)&& !fringe.contains(temp))
 			{
+				temp.setParent(n);
+				temp.setCost(n.getCost() + 1);
+				temp.setDepth(n.getDepth()+1);
 				children.add(temp);
 			}
 		}
 		
 		if(n.getY() < height-1)
 		{
-			Node temp = new Node(n.getX(), n.getY()+1);
-			temp.setParent(n);
-			temp.setCost(n.getCost() + actionCostUp);
-			temp.setDepth(n.getDepth()+1);
-			if(!isWall(temp))
+			temp = grid[n.getX()] [n.getY()+1];
+			if(!closed.contains(temp) && !walls.contains(temp)&& !fringe.contains(temp))
 			{
+				temp.setParent(n);
+				temp.setCost(n.getCost() + 1);
+				temp.setDepth(n.getDepth()+1);
 				children.add(temp);
 			}
+			
 		}
-		
+		n.setChildren(children);
 		return children;
 	}
 	
@@ -199,7 +207,6 @@ public class Graph
 				for(int i = 0; i < fringe.size(); i++)
 				{
 					Node n = fringe.get(i);
-					//System.out.println("Manhatten: " + getManhatten(n, goal) + "\nCost : " + n.getCost());
 					if(getManhatten(n, goal)+ n.getCost() <= min)
 					{
 						min = getManhatten(n, goal) + n.getCost();
@@ -207,35 +214,24 @@ public class Graph
 					}
 					
 				}
-				//System.out.println("LOWEST -- " + getManhatten(fringe.get(minIndex), goal) + "\n" + fringe.get(minIndex).getCost() + "\n---------------");
 				return minIndex;
-			
 			}
 			default:
-			{
 				return -1;
-			}
 		}
 	}
 	
 	
 	public boolean isWall(Node n)
 	{
-		for(Node node : walls)
-		{
-			if(node.getX() == n.getX() && node.getY() == n.getY())
-			{
-				return true;
-			}
-		}
-		return false;
+		return walls.contains(n);
 	}
 	
 	
 	public void addWall(int wallX, int wallY)
 	{
-		Node n = new Node(wallX, wallY);
-		walls.add(n);
+		
+		walls.add(grid[wallX][wallY]);
 	}
 	
 	public Node search(Node start, Node end, String method) throws InterruptedException
@@ -256,23 +252,11 @@ public class Graph
 			{
 				return temp;
 			}
-			boolean found = false;
-			for(Node n : closed)
-			{
-				if(n.getX() == temp.getX() && temp.getY() == n.getY())
-				{
-					found = true;
-				}
-			}
+			boolean found = closed.contains(temp);
 			if(!found)
 			{
 				closed.add(temp);
-				for(Node n : expand(temp))
-				{
-					fringe.add(n);
-					//System.out.println("adding " + n.getX() + ", " + n.getY());
-				}
-				;
+				fringe.addAll(expand(temp));
 				Event.fireEvent(root, new SearchEvent(SearchEvent.EXPANDED, this));
 				Thread.sleep(100);
 				nodesExpanded++;
@@ -287,11 +271,10 @@ public class Graph
 		return fringe;
 	}
 	
-	public ArrayList<Node> getClosed()
+	public HashSet<Node> getClosed()
 	{
 		return closed;
 	}
-	
 	
 	public Node getStart()
 	{
@@ -303,14 +286,14 @@ public class Graph
 		return goal;
 	}
 	
-	public void setStart(Node newStart)
+	public void setStart(int x, int y)
 	{
-		start = newStart;
+		start = grid[x][y];
 	}
 	
-	public void setGoal(Node newGoal)
+	public void setGoal(int x, int y)
 	{
-		goal = newGoal;
+		goal = grid[x][y];
 	}
 	
 	public ArrayList<String> getPath(Node goal)
@@ -345,17 +328,4 @@ public class Graph
 	{
 		return grid;
 	}
-	
-	
-	/*
-	 * public static void main(String[] args) { Graph graph = new Graph(10, 10);
-	 * for(int i = 0; i < 7; i++) { graph.addWall(4, i); } graph.addWall(1, 0); Node
-	 * finalNode = graph.search(0,0, 9, 0, "ASTAR"); if(finalNode != null) {
-	 * ArrayList<String> path = graph.getPath(finalNode); for(int i = path.size()-1;
-	 * i >=0; i--) { System.out.println(path.get(i)); }
-	 * System.out.println("Nodes Expanded: " + graph.nodesExpanded); } else {
-	 * System.out.println("NO PATH FOUND"); }
-	 * 
-	 * }
-	 */
 }
