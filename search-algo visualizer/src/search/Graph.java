@@ -26,6 +26,8 @@ public class Graph
 	
 	public Graph(int width, int height, Group root)
 	{
+		goal = new Node(width/2+1, height/2);
+		start = new Node(width/2-1, height/2);
 		this.root = root;
 		nodesExpanded = 0;
 		actionCostLeft = 1;
@@ -49,6 +51,36 @@ public class Graph
 
 	}
 	
+	public void resetNodes() 
+	{
+		goal = new Node(width/2+1, height/2);
+		start = new Node(width/2-1, height/2);
+		nodesExpanded = 0;
+		walls = new ArrayList<Node>();
+		closed = new ArrayList<Node>();
+		fringe = new ArrayList<Node>();
+	}
+	
+	public void resetSearch()
+	{
+		nodesExpanded = 0;
+		closed = new ArrayList<Node>();
+		fringe = new ArrayList<Node>();
+	}
+	
+	
+	public void removeWall(int x, int y)
+	{
+		for(int i = 0; i < walls.size(); i++)
+		{
+			Node w = walls.get(i);
+			if(w.getX() == x && w.getY() == y)
+			{
+				walls.remove(i);
+				break;
+			}
+		}
+	}
 	
 	public int getWidth()
 	{
@@ -114,7 +146,7 @@ public class Graph
 	}
 	
 	
-	public int getManhatten(Node n1, Node n2)
+	private int getManhatten(Node n1, Node n2)
 	{
 		int disX = Math.abs(n1.getX() - n2.getX());
 		int disY = Math.abs(n1.getY() - n2.getY());
@@ -187,7 +219,7 @@ public class Graph
 	}
 	
 	
-	private boolean isWall(Node n)
+	public boolean isWall(Node n)
 	{
 		for(Node node : walls)
 		{
