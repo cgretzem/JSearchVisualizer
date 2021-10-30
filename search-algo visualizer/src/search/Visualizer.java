@@ -302,6 +302,9 @@ public class Visualizer extends Application
 		gbfs.setToggleGroup(searchTypes);
 		
 		
+		
+		
+		
 		VBox algoControls = new VBox(10);
 		Label controlLabel = new Label("Select an Algorithm: ");
 		algoControls.getChildren().add(controlLabel);
@@ -309,12 +312,58 @@ public class Visualizer extends Application
 		algoControls.getChildren().add(bfs);
 		algoControls.getChildren().add(gbfs);
 		
+		ToggleGroup speedTypes = new ToggleGroup();
+		
+		RadioButton slowSpeed = new RadioButton("Slow");
+		slowSpeed.setOnAction(new EventHandler<ActionEvent>() 
+		{
+			@Override
+			public void handle(ActionEvent arg0) {graph.setSpeed(500);	}
+		});
+		slowSpeed.setToggleGroup(speedTypes);
+		slowSpeed.setSelected(true);
+		
+		RadioButton mediumSpeed = new RadioButton("Medium");
+		mediumSpeed.setOnAction(new EventHandler<ActionEvent>() 
+		{
+			@Override
+			public void handle(ActionEvent arg0) {graph.setSpeed(100);}
+		});
+		mediumSpeed.setToggleGroup(speedTypes);
+		
+		RadioButton highSpeed = new RadioButton("Fast");
+		highSpeed.setOnAction(new EventHandler<ActionEvent>() 
+		{
+			@Override
+			public void handle(ActionEvent arg0) {graph.setSpeed(50);	}
+		});
+		highSpeed.setToggleGroup(speedTypes);
+		
+		RadioButton superHighSpeed = new RadioButton("Super Fast");
+		superHighSpeed.setOnAction(new EventHandler<ActionEvent>() 
+		{
+			@Override
+			public void handle(ActionEvent arg0) {graph.setSpeed(10);	}
+		});
+		superHighSpeed.setToggleGroup(speedTypes);
+		
+		
+		
+		VBox speedControls = new VBox(10);
+		Label speedControlLabel = new Label("Select a speed: ");
+		speedControls.getChildren().add(speedControlLabel);
+		speedControls.getChildren().add(slowSpeed);
+		speedControls.getChildren().add(mediumSpeed);
+		speedControls.getChildren().add(highSpeed);
+		speedControls.getChildren().add(superHighSpeed);
+		
 		VBox graphControls = new VBox(10);
 		graphControls.getChildren().add(startSearch);
 		graphControls.getChildren().add(resetGraph);
 		
 		VBox menu = new VBox(50);
 		menu.getChildren().add(algoControls);
+		menu.getChildren().add(speedControls);
 		menu.getChildren().add(graphControls);
 		menu.setPadding(new Insets(20, 10, 10, 10));
 		hbox.getChildren().add(recGroup);
@@ -449,6 +498,10 @@ public class Visualizer extends Application
 		pane.setContent(p);
 		pane.setFitToWidth(true);
 		pane.setPrefWidth(50);
+		if(vbox1.getChildren().size() == 4)
+		{
+			vbox1.getChildren().remove(3);
+		}
 		vbox1.getChildren().add(pane);
 		
 	}

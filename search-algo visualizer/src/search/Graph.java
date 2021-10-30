@@ -14,7 +14,7 @@ public class Graph
 {
 	private int width;
 	private int height;
-	
+	private int speed;
 	private int nodesExpanded;
 	private Node[][] grid;
 	private ArrayList<Node> fringe;
@@ -24,6 +24,7 @@ public class Graph
 	
 	public Graph(int width, int height, Group root)
 	{
+		this.speed = 500;
 		this.root = root;
 		nodesExpanded = 0;
 		walls = new HashSet<Node>();
@@ -48,6 +49,11 @@ public class Graph
 	public int getNodesExpanded()
 	{
 		return nodesExpanded;
+	}
+	
+	public void setSpeed(int newSpeed)
+	{
+		speed = newSpeed;
 	}
 	
 	public void resetNodes() 
@@ -258,7 +264,7 @@ public class Graph
 				closed.add(temp);
 				fringe.addAll(expand(temp));
 				Event.fireEvent(root, new SearchEvent(SearchEvent.EXPANDED, this));
-				Thread.sleep(100);
+				Thread.sleep(speed);
 				nodesExpanded++;
 			}
 		}
