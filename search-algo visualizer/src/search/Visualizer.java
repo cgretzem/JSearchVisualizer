@@ -380,8 +380,8 @@ public class Visualizer extends Application
 	{
 		HBox hbox1 = (HBox)root.getChildren().get(0);
 		VBox vbox1 = (VBox)hbox1.getChildren().get(1);
-		if(vbox1.getChildren().size() == 3)
-			vbox1.getChildren().remove(2);
+		if(vbox1.getChildren().size() == 4)
+			vbox1.getChildren().remove(3);
 		
 		Group recGroup1 = (Group)hbox1.getChildren().get(0);
 		graph.resetNodes();
@@ -414,8 +414,8 @@ public class Visualizer extends Application
 	{
 		HBox hbox1 = (HBox)root.getChildren().get(0);
 		VBox vbox1 = (VBox)hbox1.getChildren().get(1);
-		if(vbox1.getChildren().size() == 3)
-			vbox1.getChildren().remove(2);
+		if(vbox1.getChildren().size() == 4)
+			vbox1.getChildren().remove(3);
 		
 		Group recGroup1 = (Group)hbox1.getChildren().get(0);
 		graph.resetSearch();
@@ -500,6 +500,7 @@ public class Visualizer extends Application
 		pane.setPrefWidth(50);
 		if(vbox1.getChildren().size() == 4)
 		{
+
 			vbox1.getChildren().remove(3);
 		}
 		vbox1.getChildren().add(pane);
